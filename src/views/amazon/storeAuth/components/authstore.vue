@@ -7,26 +7,31 @@
 		  <el-alert  v-if="authtype=='manuAuthority'&&!formInline.isdeveloper"  title="请确保当前的电脑和IP是您要授权店铺的常用环境，以免店铺关联!" type="error" show-icon />
 		  <el-alert  v-if="authtype=='amazonAuthority'&&!formInline.isdeveloper"  title="检测到你正在绑定授权,请选择当前要绑定的店铺!" type="error" show-icon />
 		  <el-form :inline="true" :model="formInline" class="form-width-fill" label-width="auto">
+			<el-form-item label="平台"   >
+		       <el-select v-model="formInline.platform" placeholder="请选择...">
+		         <el-option v-for="(item,index) in platformData" :label="item.name" :value="item.id" />
+		       </el-select>
+		     </el-form-item>
 		     <el-form-item label="店铺名称"   >
 		       <el-select v-model="formInline.groupid" placeholder="请选择..." @change="selectStote">
 		         <el-option v-for="(item,index) in storelist.list" :label="item.name" :value="item.id" />
 		       </el-select>
 		     </el-form-item>
-			 <el-form-item  v-if="authtype=='manuAuthority' && !formInline.isdeveloper" label="站点"  >
+			 <el-form-item  v-if="authtype=='manuAuthority' && !formInline.isdeveloper && formInline.platform===10" label="站点"  >
 			   <el-select v-model="formInline.marketplaceid" placeholder="同区域站点绑定一个,该区域所有站点都会绑定!" @change="selectCountry">
 			     <el-option  v-for="(item,index) in market" :label="item.name" v-show="item.name !=='中国'" :value="item.marketplaceid" >
 				 {{item.name}}<span class="font-extraSmall"> - {{item.regionName}}</span>
 				 </el-option> 
 			   </el-select>
 			 </el-form-item>
-			 <el-form-item  v-if="authtype=='amazonAuthority' || formInline.isdeveloper" label="站点" >
+			 <el-form-item  v-if="(authtype=='amazonAuthority' || formInline.isdeveloper)  && formInline.platform===10" label="站点" >
 			   <el-select v-model="formInline.awsRegion" placeholder="同区域站点绑定一个,该区域所有站点都会绑定!" @change="selectCountry">
 			          <el-option   label="北美"  value="us-east-1" ></el-option>
 					  <el-option   label="欧洲"  value="eu-west-1" ></el-option>
 					  <el-option   label="远东"  value="us-west-2" ></el-option>
 			   </el-select>
 			 </el-form-item>
-			  <el-form-item  label="类型" >
+			  <el-form-item v-if="formInline.platform===10" label="类型" >
 				 <el-switch
 					 v-model="formInline.isdeveloper"
 					 class="ml-2"
@@ -37,7 +42,7 @@
 					 inactive-text="常规"
 				   />
 				</el-form-item>
-				<el-form-item  v-if="formInline.isdeveloper" label="Seller Id" >
+				<el-form-item  v-if="formInline.isdeveloper || formInline.platform===20" label="Seller Id" >
 				 	 <el-input v-model="formInline.sellerid"></el-input>
 				</el-form-item>    
 				<el-form-item  v-if="formInline.isdeveloper" label="Access Key" >
@@ -49,10 +54,10 @@
 				<el-form-item  v-if="formInline.isdeveloper" label="Role Arn" >
 					 <el-input v-model="formInline.roleArn"></el-input>
 				</el-form-item> 
-				<el-form-item  v-if="formInline.isdeveloper" label="Client Id" >
+				<el-form-item  v-if="formInline.isdeveloper || formInline.platform===20" label="Client Id" >
 					 <el-input v-model="formInline.clientId"></el-input>
 				</el-form-item> 
-				<el-form-item  v-if="formInline.isdeveloper" label="Client Secret" >
+				<el-form-item  v-if="formInline.isdeveloper || formInline.platform===20" label="Client Secret" >
 					 <el-input v-model="formInline.clientSecret"></el-input>
 				</el-form-item> 
 				<el-form-item  v-if="formInline.isdeveloper" label="Refresh Token" >
@@ -61,7 +66,7 @@
 		   </el-form>
 		   <template #footer>
 		     <span class="dialog-footer">
-			    <div   v-if="formInline.isdeveloper" >
+			    <div   v-if="formInline.isdeveloper || formInline.platform===20" >
 				       <el-button @click="authVisible = false">取消</el-button>
 				       <el-button  type="primary" @click="submitDeveloperAuth"  >确认</el-button>
 			    </div>
@@ -88,6 +93,16 @@
     const { storelist} = toRefs(props);
 	const emit = defineEmits(['comfirm']);
 	const route = useRoute();
+	const platformData = [
+		{
+			"id": 10,
+			"name": 'AMAZON'
+		},
+		{
+			"id": 20,
+			"name": 'OZON'
+		}
+	];
 	let authVisible =ref(false)
 	let market =ref()
 	var authtype=ref('manuAuthority');
